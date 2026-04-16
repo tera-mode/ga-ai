@@ -10,6 +10,9 @@
 !.yarn/releases
 !.yarn/versions
 
+# docs
+/docs
+
 # testing
 /coverage
 
@@ -39,3 +42,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code local settings (may contain file paths)
+.claude/
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# Firebase local emulator data
+.firebase/
+firebase-debug.log
