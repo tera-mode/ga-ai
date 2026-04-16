@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   useCallback,
   type ReactNode,
 } from 'react';
@@ -29,7 +30,7 @@ interface AuthContextValue {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  /** 期限切れ時にトークンを無音で再取得する */
+  /** 期限切れ時にトークンを再取得してセッションを更新する */
   refreshGoogleToken: () => Promise<boolean>;
 }
 
@@ -52,22 +53,36 @@ async function storeSession(user: User, accessToken: string): Promise<void> {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  /**
+   * signInWithGoogle が storeSession を完了させるまで loading を true に保つフラグ。
+   * onAuthStateChanged → redirect のレースコンディションを防ぐ。
+   */
+  const sessionPending = useRef(false);
 
   useEffect(() => {
     return onAuthStateChanged(firebaseAuth, (u) => {
       setUser(u);
-      setLoading(false);
+      // signInWithGoogle の storeSession が完了してから loading を解除する
+      if (!sessionPending.current) {
+        setLoading(false);
+      }
     });
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    const provider = buildProvider();
-    // prompt: consent で毎回確認（Google の refresh token を取得するため）
-    provider.setCustomParameters({ access_type: 'offline', prompt: 'consent' });
-    const result = await signInWithPopup(firebaseAuth, provider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    if (credential?.accessToken) {
-      await storeSession(result.user, credential.accessToken);
+    sessionPending.current = true;
+    setLoading(true);
+    try {
+      const provider = buildProvider();
+      provider.setCustomParameters({ access_type: 'offline', prompt: 'consent' });
+      const result = await signInWithPopup(firebaseAuth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        await storeSession(result.user, credential.accessToken);
+      }
+    } finally {
+      sessionPending.current = false;
+      setLoading(false);
     }
   }, []);
 
@@ -76,12 +91,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetch('/api/auth/signout', { method: 'POST' });
   }, []);
 
-  /** 期限切れ時の再認証（ポップアップなし / Google セッション存在前提） */
+  /**
+   * セッションが期限切れの場合に Google トークンを再取得してセッション cookie を更新する。
+   * Google のセッションが残っていれば popup が自動クローズされる。
+   */
   const refreshGoogleToken = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
     try {
       const provider = buildProvider();
-      // prompt なし → Google がセッションを持っていれば無音で完了
       const result = await signInWithPopup(firebaseAuth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential?.accessToken) {

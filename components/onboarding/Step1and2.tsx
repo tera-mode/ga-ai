@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { ExternalLink, RefreshCw, ChevronRight, BarChart3 } from 'lucide-react';
 import type { GCPProject, GA4Property } from '@/types';
+import { useAuth } from '@/app/context/AuthContext';
 
 interface Props {
   onNext: (projectId: string, propertyId: string, propertyName: string) => void;
 }
 
 export function Step1and2({ onNext }: Props) {
+  const { refreshGoogleToken } = useAuth();
   const [projects, setProjects] = useState<GCPProject[]>([]);
   const [properties, setProperties] = useState<GA4Property[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -19,12 +21,19 @@ export function Step1and2({ onNext }: Props) {
   const [errorProperties, setErrorProperties] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<GA4Property | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (isRetry = false) => {
     setLoadingProjects(true);
     setErrorProjects(null);
     try {
       const res = await fetch('/api/ga/projects');
+      if (res.status === 401 && !isRetry) {
+        const ok = await refreshGoogleToken();
+        if (ok) { fetchProjects(true); return; }
+        setSessionExpired(true);
+        return;
+      }
       const data = await res.json() as { projects?: GCPProject[]; error?: string };
       if (!res.ok) throw new Error(data.error ?? 'Failed to fetch projects');
       setProjects(data.projects ?? []);
@@ -35,11 +44,17 @@ export function Step1and2({ onNext }: Props) {
     }
   };
 
-  const fetchProperties = async () => {
+  const fetchProperties = async (isRetry = false) => {
     setLoadingProperties(true);
     setErrorProperties(null);
     try {
       const res = await fetch('/api/ga/properties');
+      if (res.status === 401 && !isRetry) {
+        const ok = await refreshGoogleToken();
+        if (ok) { fetchProperties(true); return; }
+        setSessionExpired(true);
+        return;
+      }
       const data = await res.json() as { properties?: GA4Property[]; error?: string };
       if (!res.ok) throw new Error(data.error ?? 'Failed to fetch properties');
       setProperties(data.properties ?? []);
@@ -53,9 +68,32 @@ export function Step1and2({ onNext }: Props) {
   useEffect(() => {
     fetchProjects();
     fetchProperties();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const propNum = (p: GA4Property) => p.name.replace('properties/', '');
+
+  if (sessionExpired) {
+    return (
+      <div className="space-y-4 py-4 text-center">
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          セッションが切れました。再度サインインしてください。
+        </p>
+        <Button
+          onClick={async () => {
+            setSessionExpired(false);
+            const ok = await refreshGoogleToken();
+            if (ok) {
+              fetchProjects();
+              fetchProperties();
+            }
+          }}
+        >
+          再サインイン
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -72,7 +110,7 @@ export function Step1and2({ onNext }: Props) {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700">GCPプロジェクト</h3>
             <button
-              onClick={fetchProjects}
+              onClick={() => fetchProjects()}
               disabled={loadingProjects}
               className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 disabled:opacity-40"
             >
@@ -89,7 +127,7 @@ export function Step1and2({ onNext }: Props) {
           ) : errorProjects ? (
             <div className="space-y-2">
               <p className="text-xs text-red-500">{errorProjects}</p>
-              <Button variant="outline" size="sm" onClick={fetchProjects}>
+              <Button variant="outline" size="sm" onClick={() => fetchProjects()}>
                 <RefreshCw className="h-3 w-3" /> 再取得
               </Button>
             </div>
@@ -132,7 +170,7 @@ export function Step1and2({ onNext }: Props) {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700">GA4プロパティ</h3>
             <button
-              onClick={fetchProperties}
+              onClick={() => fetchProperties()}
               disabled={loadingProperties}
               className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 disabled:opacity-40"
             >
@@ -149,7 +187,7 @@ export function Step1and2({ onNext }: Props) {
           ) : errorProperties ? (
             <div className="space-y-2">
               <p className="text-xs text-red-500">{errorProperties}</p>
-              <Button variant="outline" size="sm" onClick={fetchProperties}>
+              <Button variant="outline" size="sm" onClick={() => fetchProperties()}>
                 <RefreshCw className="h-3 w-3" /> 再取得
               </Button>
             </div>
