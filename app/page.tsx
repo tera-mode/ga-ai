@@ -37,9 +37,14 @@ export default function LandingPage() {
             </div>
             <span className="font-semibold text-gray-900">GA4 Analytics Agent</span>
           </div>
-          <Button variant="outline" size="sm" onClick={signInWithGoogle}>
-            サインイン
-          </Button>
+          <div className="flex items-center gap-3">
+            <a href="/faq" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+              よくある質問
+            </a>
+            <Button variant="outline" size="sm" onClick={signInWithGoogle}>
+              サインイン
+            </Button>
+          </div>
         </div>
       </nav>
 

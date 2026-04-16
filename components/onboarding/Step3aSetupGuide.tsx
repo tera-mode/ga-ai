@@ -103,8 +103,18 @@ export function Step3aSetupGuide({ propertyId, projectId, onLinked, onFallback, 
             <code className="ml-2 bg-white border border-gray-200 px-2 py-0.5 rounded text-xs text-gray-700">{projectId}</code>
             <CopyButton text={projectId} />
           </li>
-          <li>データロケーション: 「Tokyo (asia-northeast1)」推奨</li>
-          <li>頻度: 「日次」+「ストリーミング」両方ON推奨</li>
+          <li>
+            データロケーション: 「Tokyo (asia-northeast1)」推奨{' '}
+            <a href="/faq#data-location" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
+              Tokyoで大丈夫？
+            </a>
+          </li>
+          <li>
+            頻度: 「日次」+「ストリーミング」両方ON推奨{' '}
+            <a href="/faq#streaming-vs-daily" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
+              ストリーミングは必要？
+            </a>
+          </li>
           <li>「送信」をクリックして保存</li>
         </ol>
       </div>

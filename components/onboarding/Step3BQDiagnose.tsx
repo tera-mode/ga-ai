@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { CheckCircle, AlertTriangle, ChevronRight, RefreshCw } from 'lucide-react';
 import type { BQDiagnostic } from '@/types';
+import { ContextualHelpButton } from '@/components/faq/ContextualHelpButton';
 
 interface Props {
   propertyId: string;
@@ -134,6 +135,12 @@ export function Step3BQDiagnose({
                 </div>
               </div>
             </button>
+          </div>
+
+          {/* Inline contextual help */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">どちらを選ぶか迷ったら</span>
+            <ContextualHelpButton step="step3-bq-diagnosis" variant="inline" />
           </div>
         </div>
       )}

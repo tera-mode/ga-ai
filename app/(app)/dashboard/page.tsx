@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
-import { Send, Loader2, Menu, BarChart2 } from 'lucide-react';
+import { Send, Loader2, Menu, BarChart2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ChatMessageBubble } from '@/components/chat/ChatMessage';
 import { Sidebar } from '@/components/chat/Sidebar';
@@ -297,6 +297,24 @@ export default function DashboardPage() {
                 {messages.map((msg) => (
                   <ChatMessageBubble key={msg.id} message={msg} />
                 ))}
+              </div>
+            )}
+
+            {/* First-time data discrepancy hint */}
+            {messages.length >= 2 && messages.length <= 4 && (
+              <div className="flex items-start gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                <HelpCircle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                  GA4管理画面の数値と異なる場合があります。{' '}
+                  <a
+                    href="/faq#data-discrepancy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium underline underline-offset-2 hover:text-amber-900"
+                  >
+                    数値が合わないと感じたら →
+                  </a>
+                </span>
               </div>
             )}
 

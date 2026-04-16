@@ -12,6 +12,8 @@ import { Step4Test } from '@/components/onboarding/Step4Test';
 import { Step5Schema } from '@/components/onboarding/Step5Schema';
 import { useOnboardingStore } from '@/lib/store';
 import type { PropertySchema } from '@/types';
+import { ContextualHelpButton } from '@/components/faq/ContextualHelpButton';
+import type { OnboardingStep } from '@/content/faq/faq-data';
 
 type SubStep = 'main' | 'setup_guide';
 
@@ -68,6 +70,15 @@ export default function OnboardingPage() {
     );
   }
 
+  // Map current wizard state to OnboardingStep for contextual help
+  const faqStep: OnboardingStep = (() => {
+    if (currentStep === 1 || currentStep === 2) return 'step1-project';
+    if (currentStep === 3 && subStep === 'setup_guide') return 'step3a-bq-setup';
+    if (currentStep === 3) return 'step3-bq-diagnosis';
+    if (currentStep === 4) return 'step4-test';
+    return 'step5-schema';
+  })();
+
   const handleComplete = (schema: PropertySchema) => {
     setSchema(schema);
     completeOnboarding();
@@ -81,7 +92,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 relative">
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-100">
         <div className="mx-auto max-w-2xl px-6 py-4 flex items-center justify-between">
@@ -94,6 +105,9 @@ export default function OnboardingPage() {
           <span className="text-xs text-gray-400">{user?.email}</span>
         </div>
       </header>
+
+      {/* Contextual help FAB */}
+      <ContextualHelpButton step={faqStep} variant="fab" />
 
       <div className="mx-auto max-w-2xl px-6 py-10 space-y-8">
         {/* タイトル */}
