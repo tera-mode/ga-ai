@@ -5,8 +5,7 @@ import { useEffect } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { BarChart2 } from 'lucide-react';
 import { StepIndicator } from '@/components/onboarding/StepIndicator';
-import { Step1Project } from '@/components/onboarding/Step1Project';
-import { Step2Property } from '@/components/onboarding/Step2Property';
+import { Step1and2 } from '@/components/onboarding/Step1and2';
 import { Step3BQDiagnose } from '@/components/onboarding/Step3BQDiagnose';
 import { Step3aSetupGuide } from '@/components/onboarding/Step3aSetupGuide';
 import { Step4Test } from '@/components/onboarding/Step4Test';
@@ -110,15 +109,13 @@ export default function OnboardingPage() {
 
         {/* ステップコンテンツ */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-8">
-          {currentStep === 1 && (
-            <Step1Project
-              onNext={(id) => { setProject(id); nextStep(); }}
-            />
-          )}
-          {currentStep === 2 && (
-            <Step2Property
-              onNext={(id, name) => { setProperty(id, name); nextStep(); }}
-              onBack={() => goToStep(1)}
+          {(currentStep === 1 || currentStep === 2) && (
+            <Step1and2
+              onNext={(projectId, propertyId, propertyName) => {
+                setProject(projectId);
+                setProperty(propertyId, propertyName);
+                goToStep(3);
+              }}
             />
           )}
           {currentStep === 3 && subStep === 'main' && selectedPropertyId && selectedPropertyName && (
@@ -132,7 +129,7 @@ export default function OnboardingPage() {
               }}
               onFallback={handleFallback}
               onSetupGuide={() => setSubStep('setup_guide')}
-              onBack={() => goToStep(2)}
+              onBack={() => goToStep(1)}
             />
           )}
           {currentStep === 3 && subStep === 'setup_guide' && selectedPropertyId && selectedProjectId && (

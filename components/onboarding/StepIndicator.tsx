@@ -1,9 +1,10 @@
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 
+// storeStep は useOnboardingStore の currentStep と対応
+// ステップ1と2を統合したため、store上は 1→3→4→5 の順で遷移する
 const STEPS = [
-  { n: 1, label: 'GCPプロジェクト' },
-  { n: 2, label: 'GA4プロパティ' },
+  { n: 1, label: '接続設定' },
   { n: 3, label: 'BQ診断' },
   { n: 4, label: '接続テスト' },
   { n: 5, label: 'スキーマ取得' },
